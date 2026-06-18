@@ -196,9 +196,12 @@ export const useDocReaderStore = create<DocReaderState & DocReaderActions>()(
 
       reorderFiles: (activeId, overId) =>
         set((s) => {
-          const from = s.files.findIndex((f) => f.id === activeId)
-          const to   = s.files.findIndex((f) => f.id === overId)
-          if (from === -1 || to === -1 || from === to) return {}
+          const activeFile = s.files.find((f) => f.id === activeId)
+          const overFile   = s.files.find((f) => f.id === overId)
+          if (!activeFile || !overFile || activeFile.catId !== overFile.catId) return {}
+          const from = s.files.indexOf(activeFile)
+          const to   = s.files.indexOf(overFile)
+          if (from === to) return {}
           const next = [...s.files]
           const [item] = next.splice(from, 1)
           next.splice(to, 0, item)
