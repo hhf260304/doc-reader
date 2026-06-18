@@ -40,18 +40,6 @@ export function DocReader() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  // Cmd+K focuses search
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
-        e.preventDefault()
-        document.getElementById('dr-search')?.focus()
-      }
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [])
-
   // Drag-drop file import
   useEffect(() => {
     const overlay = document.getElementById('dr-drop')

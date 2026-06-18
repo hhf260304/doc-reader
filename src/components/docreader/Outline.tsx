@@ -15,9 +15,9 @@ export function Outline({ headings, onScrollTo, onScrollTop }: OutlineProps) {
   return (
     <aside
       id="dr-outline"
-      style={{ width: 200, flex: '0 0 200px', padding: '48px 20px 0 4px', overflow: 'hidden' }}
+      style={{ width: 200, flex: '0 0 200px', padding: '48px 20px 0 4px', overflowY: 'auto' }}
     >
-      <div style={{ position: 'sticky', top: 0 }}>
+      <div>
         <div style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.07em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 12, paddingLeft: 14 }}>
           本頁目錄
         </div>
