@@ -6,9 +6,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-ibm-plex-sans);
-  --font-mono: var(--font-jetbrains-mono);
-  --font-serif: var(--font-newsreader);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-fira-code);
+  --font-serif: var(--font-source-serif-4);
 }
 
 /* ===== DocReader root resets ===== */
@@ -33,23 +33,23 @@ textarea#dr-md::placeholder { color: var(--muted); opacity: 0.6; }
 /* ===== Markdown rendered content ===== */
 .dr-rendered,
 #dr-edit-preview {
-  font-family: 'Newsreader', Georgia, serif;
+  font-family: 'Inter', sans-serif;
 }
 .dr-rendered h1, #dr-edit-preview h1 {
-  font-family: 'Newsreader', serif; font-size: 36px; font-weight: 600;
+  font-family: 'Source Serif 4', serif; font-size: 36px; font-weight: 600;
   line-height: 1.18; color: var(--brown); letter-spacing: -0.015em;
   margin: 0 0 10px; scroll-margin-top: 24px;
 }
 .dr-rendered h2, #dr-edit-preview h2 {
-  font-family: 'Newsreader', serif; font-size: 25px; font-weight: 600;
+  font-family: 'Source Serif 4', serif; font-size: 25px; font-weight: 600;
   color: var(--brown); margin: 44px 0 14px; scroll-margin-top: 24px;
 }
 .dr-rendered h3, #dr-edit-preview h3 {
-  font-family: 'Newsreader', serif; font-size: 19px; font-weight: 600;
+  font-family: 'Source Serif 4', serif; font-size: 19px; font-weight: 600;
   color: var(--brown); margin: 30px 0 12px; scroll-margin-top: 24px;
 }
 .dr-rendered h4, #dr-edit-preview h4 {
-  font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; font-weight: 600;
+  font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600;
   color: var(--brown); margin: 24px 0 10px;
 }
 .dr-rendered p, #dr-edit-preview p {
@@ -72,12 +72,12 @@ textarea#dr-md::placeholder { color: var(--muted); opacity: 0.6; }
 }
 .dr-rendered blockquote p, #dr-edit-preview blockquote p { margin: 6px 0; font-size: 16px; color: var(--ink); }
 .dr-rendered code, #dr-edit-preview code {
-  font-family: 'JetBrains Mono', monospace; font-size: 14px;
+  font-family: 'Fira Code', monospace; font-size: 14px;
   background: var(--code-bg); color: var(--code-ink); padding: 1px 6px; border-radius: 5px;
 }
 .dr-rendered pre code, #dr-edit-preview pre code { padding: 0; background: transparent; }
 .dr-rendered table, #dr-edit-preview table {
-  width: 100%; border-collapse: collapse; font-family: 'IBM Plex Sans', sans-serif;
+  width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif;
   font-size: 13.5px; margin: 0 0 20px; border: 1px solid var(--border);
   border-radius: 10px; overflow: hidden;
 }
@@ -107,7 +107,6 @@ textarea#dr-md::placeholder { color: var(--muted); opacity: 0.6; }
 .dr-icon-btn:hover { border-color: var(--amber) !important; color: var(--brown) !important; }
 .dr-cat-action:hover { color: var(--brown) !important; background: rgba(0,0,0,0.05) !important; }
 .dr-cat-delete:hover { color: var(--danger) !important; }
-.dr-search-input:focus { border-color: var(--amber) !important; background: var(--paper) !important; }
 .dr-fname-input:focus { border-color: var(--amber) !important; background: var(--paper) !important; }
 .dr-scroll-top:hover { color: var(--amber) !important; }
 

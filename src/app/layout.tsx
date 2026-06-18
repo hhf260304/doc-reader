@@ -1,25 +1,25 @@
 import type { Metadata } from 'next'
-import { Newsreader, IBM_Plex_Sans, JetBrains_Mono } from 'next/font/google'
+import { Source_Serif_4, Inter, Fira_Code } from 'next/font/google'
 import './globals.css'
 
-const newsreader = Newsreader({
+const sourceSerif4 = Source_Serif_4({
   subsets: ['latin'],
-  variable: '--font-newsreader',
+  variable: '--font-source-serif-4',
   weight: ['400', '500', '600', '700'],
   style: ['normal', 'italic'],
   display: 'swap',
 })
 
-const ibmPlexSans = IBM_Plex_Sans({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-ibm-plex-sans',
+  variable: '--font-inter',
   weight: ['400', '500', '600'],
   display: 'swap',
 })
 
-const jetBrainsMono = JetBrains_Mono({
+const firaCode = Fira_Code({
   subsets: ['latin'],
-  variable: '--font-jetbrains-mono',
+  variable: '--font-fira-code',
   weight: ['400', '500'],
   display: 'swap',
 })
@@ -33,7 +33,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="zh-TW"
-      className={`${newsreader.variable} ${ibmPlexSans.variable} ${jetBrainsMono.variable} h-full`}
+      className={`${sourceSerif4.variable} ${inter.variable} ${firaCode.variable} h-full`}
     >
       <body className="h-full antialiased">{children}</body>
     </html>

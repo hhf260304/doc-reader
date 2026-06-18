@@ -29,33 +29,11 @@ export function Navbar({ dark, onToggleTheme, onToggleSidebar }: NavbarProps) {
             <path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H17l3 3v13.5A1.5 1.5 0 0 1 18.5 21h-13A1.5 1.5 0 0 1 4 19.5z" fill="#D4A96A" fillOpacity="0.28" />
             <path d="M8 8.5h7M8 12h7M8 15.5h4" />
           </svg>
-          <span style={{ fontFamily: "'Newsreader', serif", fontSize: 19, fontWeight: 600, color: 'var(--brown)', letterSpacing: '-0.01em' }}>DocReader</span>
+          <span style={{ fontFamily: "'Source Serif 4', serif", fontSize: 19, fontWeight: 600, color: 'var(--brown)', letterSpacing: '-0.01em' }}>DocReader</span>
         </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-            style={{ position: 'absolute', left: 11, color: 'var(--muted)', pointerEvents: 'none' }}>
-            <circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
-          <input
-            id="dr-search"
-            placeholder="搜尋文件…"
-            className="dr-search-input"
-            style={{
-              width: 240, height: 34, padding: '0 52px 0 34px', background: 'var(--sidebar-bg)',
-              border: '1px solid var(--border)', borderRadius: 8, color: 'var(--ink)',
-              fontFamily: "'IBM Plex Sans', sans-serif", fontSize: 13, outline: 'none',
-            }}
-          />
-          <kbd style={{
-            position: 'absolute', right: 9, display: 'flex', alignItems: 'center',
-            height: 20, padding: '0 6px', background: 'var(--paper)', border: '1px solid var(--border)',
-            borderRadius: 5, fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--muted)',
-          }}>⌘K</kbd>
-        </div>
-
         <button
           onClick={onToggleTheme}
           id="dr-theme"
