@@ -1,0 +1,126 @@
+<h2>分頁列要放在哪裡？</h2>
+<p class="subtitle">決定分頁列的位置，影響整體閱讀體驗</p>
+
+<div class="cards">
+
+  <!-- Option A -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px 12px 0; background:#faf8f4;">
+      <!-- App mockup A: tabs below navbar -->
+      <div style="font-family:sans-serif; border:1px solid #e5ddd0; border-radius:8px; overflow:hidden; font-size:11px;">
+        <!-- Navbar -->
+        <div style="background:#3d2b1f; color:#fff; padding:7px 12px; display:flex; align-items:center; gap:8px;">
+          <span style="font-weight:700; letter-spacing:0.02em;">DocReader</span>
+          <span style="margin-left:auto; opacity:0.6;">☀ ☰</span>
+        </div>
+        <!-- Tab bar directly below navbar -->
+        <div style="background:#f0ebe4; border-bottom:1px solid #e5ddd0; display:flex; align-items:stretch; gap:1px; overflow:hidden;">
+          <div style="background:#faf8f4; border-right:1px solid #e5ddd0; padding:6px 14px; color:#3d2b1f; font-weight:600; font-size:10.5px; border-bottom:2px solid #d4a96a;">README.md</div>
+          <div style="padding:6px 14px; color:#8a7060; font-size:10.5px;">安裝指南.md</div>
+          <div style="padding:6px 14px; color:#8a7060; font-size:10.5px;">FAQ.md</div>
+        </div>
+        <!-- Body -->
+        <div style="display:flex; height:80px;">
+          <div style="width:70px; background:#f5f0e8; border-right:1px solid #e5ddd0; padding:8px 6px;">
+            <div style="font-size:9px; color:#8a7060; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">文件庫</div>
+            <div style="font-size:9.5px; color:#3d2b1f; padding:3px 4px; background:#ede8df; border-radius:4px; margin-bottom:2px;">README.md</div>
+            <div style="font-size:9.5px; color:#8a7060; padding:3px 4px; margin-bottom:2px;">安裝指南.md</div>
+            <div style="font-size:9.5px; color:#8a7060; padding:3px 4px;">FAQ.md</div>
+          </div>
+          <div style="flex:1; padding:8px 12px;">
+            <div style="font-size:13px; font-weight:700; color:#3d2b1f; margin-bottom:4px;">README</div>
+            <div style="height:6px; background:#e5ddd0; border-radius:3px; margin-bottom:3px;"></div>
+            <div style="height:6px; background:#e5ddd0; border-radius:3px; width:70%; margin-bottom:3px;"></div>
+            <div style="height:6px; background:#e5ddd0; border-radius:3px; width:85%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A：Navbar 正下方（全寬）</h3>
+      <p>分頁列橫跨整個視窗寬度，緊接在頂部導覽列下方。VS Code / 瀏覽器的常見模式，最好辨識。</p>
+    </div>
+  </div>
+
+  <!-- Option B -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px 12px 0; background:#faf8f4;">
+      <!-- App mockup B: tabs above content only (inside main area) -->
+      <div style="font-family:sans-serif; border:1px solid #e5ddd0; border-radius:8px; overflow:hidden; font-size:11px;">
+        <!-- Navbar -->
+        <div style="background:#3d2b1f; color:#fff; padding:7px 12px; display:flex; align-items:center; gap:8px;">
+          <span style="font-weight:700; letter-spacing:0.02em;">DocReader</span>
+          <span style="margin-left:auto; opacity:0.6;">☀ ☰</span>
+        </div>
+        <!-- Body -->
+        <div style="display:flex; height:90px;">
+          <div style="width:70px; background:#f5f0e8; border-right:1px solid #e5ddd0; padding:8px 6px;">
+            <div style="font-size:9px; color:#8a7060; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">文件庫</div>
+            <div style="font-size:9.5px; color:#3d2b1f; padding:3px 4px; background:#ede8df; border-radius:4px; margin-bottom:2px;">README.md</div>
+            <div style="font-size:9.5px; color:#8a7060; padding:3px 4px; margin-bottom:2px;">安裝指南.md</div>
+            <div style="font-size:9.5px; color:#8a7060; padding:3px 4px;">FAQ.md</div>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column;">
+            <!-- Tab bar inside main content area only -->
+            <div style="background:#f0ebe4; border-bottom:1px solid #e5ddd0; display:flex; align-items:stretch;">
+              <div style="background:#faf8f4; border-right:1px solid #e5ddd0; padding:5px 12px; color:#3d2b1f; font-weight:600; font-size:10px; border-bottom:2px solid #d4a96a;">README.md</div>
+              <div style="padding:5px 12px; color:#8a7060; font-size:10px;">安裝指南.md</div>
+              <div style="padding:5px 12px; color:#8a7060; font-size:10px;">FAQ.md</div>
+            </div>
+            <div style="flex:1; padding:8px 12px;">
+              <div style="font-size:13px; font-weight:700; color:#3d2b1f; margin-bottom:4px;">README</div>
+              <div style="height:6px; background:#e5ddd0; border-radius:3px; margin-bottom:3px;"></div>
+              <div style="height:6px; background:#e5ddd0; border-radius:3px; width:70%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B：主內容區頂部（sidebar 旁）</h3>
+      <p>分頁列只橫跨主內容區域，sidebar 保持獨立，版面更清晰，閱讀焦點較集中。</p>
+    </div>
+  </div>
+
+  <!-- Option C -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:16px 12px 0; background:#faf8f4;">
+      <!-- App mockup C: tabs as pinned section in sidebar -->
+      <div style="font-family:sans-serif; border:1px solid #e5ddd0; border-radius:8px; overflow:hidden; font-size:11px;">
+        <!-- Navbar -->
+        <div style="background:#3d2b1f; color:#fff; padding:7px 12px; display:flex; align-items:center; gap:8px;">
+          <span style="font-weight:700; letter-spacing:0.02em;">DocReader</span>
+          <span style="margin-left:auto; opacity:0.6;">☀ ☰</span>
+        </div>
+        <!-- Body -->
+        <div style="display:flex; height:90px;">
+          <div style="width:80px; background:#f5f0e8; border-right:1px solid #e5ddd0; padding:6px;">
+            <!-- Pinned / open tabs section in sidebar -->
+            <div style="font-size:9px; color:#8a7060; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">已開啟</div>
+            <div style="display:flex; align-items:center; gap:4px; font-size:9.5px; color:#3d2b1f; padding:3px 4px; background:#ede8df; border-radius:4px; margin-bottom:2px; border-left:2px solid #d4a96a;">
+              <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">README.md</span>
+              <span style="color:#b09070; cursor:pointer;">×</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:4px; font-size:9.5px; color:#8a7060; padding:3px 4px; margin-bottom:2px;">
+              <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">安裝指南.md</span>
+              <span style="color:#b09070; cursor:pointer;">×</span>
+            </div>
+            <div style="border-top:1px solid #e5ddd0; margin:4px 0;"></div>
+            <div style="font-size:9px; color:#8a7060; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:3px;">文件庫</div>
+            <div style="font-size:9.5px; color:#8a7060; padding:2px 4px;">FAQ.md</div>
+          </div>
+          <div style="flex:1; padding:8px 12px;">
+            <div style="font-size:13px; font-weight:700; color:#3d2b1f; margin-bottom:4px;">README</div>
+            <div style="height:6px; background:#e5ddd0; border-radius:3px; margin-bottom:3px;"></div>
+            <div style="height:6px; background:#e5ddd0; border-radius:3px; width:70%;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C：Sidebar 頂端「已開啟」區塊</h3>
+      <p>不加橫向分頁列，改在 sidebar 上方新增「已開啟」區段顯示開啟中的文件，節省垂直空間，但互動模式較不直觀。</p>
+    </div>
+  </div>
+
+</div>
