@@ -57,7 +57,7 @@ function SortableFileRow({
       data-active={file.id === activeFileId ? 'true' : 'false'}
       onClick={() => onOpenFile(file.id)}
       style={{
-        transform: CSS.Transform.toString(transform),
+        transform: CSS.Translate.toString(transform),
         transition,
         opacity: isDragging ? 0.25 : 1,
         display: 'flex',
@@ -114,7 +114,7 @@ function CategoryRow({ cat, files, activeFileId, onOpenFile }: CategoryRowProps)
         gap: 2,
         marginTop: 8,
         borderRadius: 8,
-        transform: CSS.Transform.toString(transform),
+        transform: CSS.Translate.toString(transform),
         transition,
         opacity: isDragging ? 0.3 : 1,
       }}
@@ -270,6 +270,8 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
     }
   }
 
+  const handleDragCancel = () => setDragActiveId(null)
+
   const handleNewDoc = () => {
     const id = uid()
     const starter = '# 新文件\n\n在這裡開始撰寫你的 Markdown 內容。\n'
@@ -348,6 +350,7 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
+          onDragCancel={handleDragCancel}
         >
           <SortableContext items={catIds} strategy={verticalListSortingStrategy}>
             {cats.map((cat) => (
