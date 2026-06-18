@@ -59,6 +59,7 @@ interface DocReaderActions {
   deleteCategory: (id: string) => void
   reorderCats: (activeId: string, overId: string) => void
   reorderFiles: (activeId: string, overId: string) => void
+  reorderTabs: (activeId: string, overId: string) => void
 }
 
 const DEFAULT_CATS: Category[] = [
@@ -206,6 +207,17 @@ export const useDocReaderStore = create<DocReaderState & DocReaderActions>()(
           const [item] = next.splice(from, 1)
           next.splice(to, 0, item)
           return { files: next }
+        }),
+
+      reorderTabs: (activeId, overId) =>
+        set((s) => {
+          const from = s.openTabs.indexOf(activeId)
+          const to   = s.openTabs.indexOf(overId)
+          if (from === -1 || to === -1 || from === to) return {}
+          const next = [...s.openTabs]
+          const [item] = next.splice(from, 1)
+          next.splice(to, 0, item)
+          return { openTabs: next }
         }),
     }),
     {
