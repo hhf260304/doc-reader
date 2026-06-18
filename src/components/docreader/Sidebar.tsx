@@ -101,7 +101,7 @@ function CategoryRow({ cat, files, activeFileId, onOpenFile }: CategoryRowProps)
   const { toggleCat, setConfirmCatId, setRenamingCatId, renameCategory, renamingCatId } = useDocReaderStore()
   const isOpen = cat.open !== false
   const renameRef = useRef<HTMLInputElement>(null)
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id, disabled: !cat.deletable })
   const fileIds = files.map((f) => f.id)
 
   return (
@@ -141,7 +141,7 @@ function CategoryRow({ cat, files, activeFileId, onOpenFile }: CategoryRowProps)
         ) : (
           <>
             <button
-              onClick={() => toggleCat(cat.id)}
+              onClick={() => { if (!isDragging) toggleCat(cat.id) }}
               {...attributes}
               {...listeners}
               style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'grab', fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--muted)', padding: '2px 4px' }}
@@ -263,6 +263,7 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
           reorderFiles(activeId, overId)
         } else {
           moveFile(activeId, overCat)
+          reorderFiles(activeId, overId)
         }
       } else if (isCat(overId)) {
         moveFile(activeId, overId)
