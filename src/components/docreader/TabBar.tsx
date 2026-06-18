@@ -77,6 +77,7 @@ function SortableTab({ fileId, isActive, name, onSwitchTab, onCloseTab }: Sortab
       </span>
       <button
         className="dr-tab-close"
+        onPointerDown={(e) => e.stopPropagation()}
         onClick={(e) => { e.stopPropagation(); onCloseTab(fileId) }}
         aria-label="關閉分頁"
         style={{
