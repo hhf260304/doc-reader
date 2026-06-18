@@ -1,5 +1,19 @@
 'use client'
 
+import {
+  DndContext,
+  DragEndEvent,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useDocReaderStore } from '@/store/docreader'
 
 interface TabBarProps {
@@ -7,92 +21,140 @@ interface TabBarProps {
   onCloseTab: (id: string) => void
 }
 
+interface SortableTabProps {
+  fileId: string
+  isActive: boolean
+  name: string
+  onSwitchTab: (id: string) => void
+  onCloseTab: (id: string) => void
+}
+
+function SortableTab({ fileId, isActive, name, onSwitchTab, onCloseTab }: SortableTabProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: fileId })
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className="dr-tab"
+      data-active={isActive ? 'true' : 'false'}
+      onClick={() => onSwitchTab(fileId)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        padding: '0 10px 0 14px',
+        height: 36,
+        cursor: isDragging ? 'grabbing' : 'pointer',
+        flexShrink: 0,
+        maxWidth: 180,
+        background: isActive ? 'var(--paper)' : 'transparent',
+        borderRight: '1px solid var(--border)',
+        borderBottom: isActive ? '2px solid var(--amber)' : '2px solid transparent',
+        color: isActive ? 'var(--brown)' : 'var(--muted)',
+        fontFamily: "'IBM Plex Sans', sans-serif",
+        fontSize: 12.5,
+        fontWeight: isActive ? 600 : 400,
+        userSelect: 'none',
+        transform: CSS.Translate.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        zIndex: isDragging ? 10 : undefined,
+        position: 'relative',
+      }}
+    >
+      <span
+        style={{
+          flex: 1,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          minWidth: 0,
+        }}
+      >
+        {name}
+      </span>
+      <button
+        className="dr-tab-close"
+        onClick={(e) => { e.stopPropagation(); onCloseTab(fileId) }}
+        aria-label="關閉分頁"
+        style={{
+          flexShrink: 0,
+          width: 18,
+          height: 18,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'transparent',
+          border: 'none',
+          borderRadius: 4,
+          cursor: 'pointer',
+          color: 'var(--muted)',
+          padding: 0,
+        }}
+      >
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+  )
+}
+
 export function TabBar({ onSwitchTab, onCloseTab }: TabBarProps) {
-  const { openTabs, activeFileId, files } = useDocReaderStore()
+  const { openTabs, activeFileId, files, reorderTabs } = useDocReaderStore()
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  )
+
+  const handleDragEnd = (e: DragEndEvent) => {
+    if (e.over && e.active.id !== e.over.id) {
+      reorderTabs(String(e.active.id), String(e.over.id))
+    }
+  }
 
   if (openTabs.length === 0) return null
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        alignItems: 'stretch',
-        overflowX: 'auto',
-        background: 'var(--sidebar-bg)',
-        borderBottom: '1px solid var(--border)',
-        flexShrink: 0,
-        scrollbarWidth: 'none',
-      }}
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
     >
-      {openTabs.map((fileId) => {
-        const file = files.find((f) => f.id === fileId)
-        if (!file) return null
-        const isActive = fileId === activeFileId
-        const name = file.name.replace(/\.(md|markdown|txt)$/i, '')
+      <SortableContext items={openTabs} strategy={horizontalListSortingStrategy}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'stretch',
+            overflowX: 'auto',
+            background: 'var(--sidebar-bg)',
+            borderBottom: '1px solid var(--border)',
+            flexShrink: 0,
+            scrollbarWidth: 'none',
+          }}
+        >
+          {openTabs.map((fileId) => {
+            const file = files.find((f) => f.id === fileId)
+            if (!file) return null
+            const isActive = fileId === activeFileId
+            const name = file.name.replace(/\.(md|markdown|txt)$/i, '')
 
-        return (
-          <div
-            key={fileId}
-            className="dr-tab"
-            data-active={isActive ? 'true' : 'false'}
-            onClick={() => onSwitchTab(fileId)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              padding: '0 10px 0 14px',
-              height: 36,
-              cursor: 'pointer',
-              flexShrink: 0,
-              maxWidth: 180,
-              background: isActive ? 'var(--paper)' : 'transparent',
-              borderRight: '1px solid var(--border)',
-              borderBottom: isActive ? '2px solid var(--amber)' : '2px solid transparent',
-              color: isActive ? 'var(--brown)' : 'var(--muted)',
-              fontFamily: "'IBM Plex Sans', sans-serif",
-              fontSize: 12.5,
-              fontWeight: isActive ? 600 : 400,
-              userSelect: 'none',
-            }}
-          >
-            <span
-              style={{
-                flex: 1,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                minWidth: 0,
-              }}
-            >
-              {name}
-            </span>
-            <button
-              className="dr-tab-close"
-              onClick={(e) => { e.stopPropagation(); onCloseTab(fileId) }}
-              aria-label="關閉分頁"
-              style={{
-                flexShrink: 0,
-                width: 18,
-                height: 18,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'transparent',
-                border: 'none',
-                borderRadius: 4,
-                cursor: 'pointer',
-                color: 'var(--muted)',
-                padding: 0,
-              }}
-            >
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
-          </div>
-        )
-      })}
-    </div>
+            return (
+              <SortableTab
+                key={fileId}
+                fileId={fileId}
+                isActive={isActive}
+                name={name}
+                onSwitchTab={onSwitchTab}
+                onCloseTab={onCloseTab}
+              />
+            )
+          })}
+        </div>
+      </SortableContext>
+    </DndContext>
   )
 }
