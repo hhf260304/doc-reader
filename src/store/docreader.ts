@@ -97,13 +97,11 @@ export const useDocReaderStore = create<DocReaderState & DocReaderActions>()(
           const idx = s.openTabs.indexOf(id)
           if (idx === -1) return {}
           const newTabs = s.openTabs.filter((t) => t !== id)
-          const newPositions = { ...s.scrollPositions }
-          delete newPositions[id]
           const newActive =
             s.activeFileId === id
               ? (newTabs[idx] ?? newTabs[idx - 1] ?? null)
               : s.activeFileId
-          return { openTabs: newTabs, scrollPositions: newPositions, activeFileId: newActive }
+          return { openTabs: newTabs, activeFileId: newActive }
         }),
 
       setScrollPosition: (id, top) =>

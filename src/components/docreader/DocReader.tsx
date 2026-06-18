@@ -8,13 +8,13 @@ import { Sidebar } from './Sidebar'
 import { MainContent } from './MainContent'
 import { Outline } from './Outline'
 import { TabBar } from './TabBar'
+import { DeleteCatDialog } from './DeleteCatDialog'
+import { DEMO_HEADINGS } from './constants'
 
 function OutlineWrapper({ onScrollTo, onScrollTop }: { onScrollTo: (id: string) => void; onScrollTop: () => void }) {
   const { headings } = useDocReaderStore()
   return <Outline headings={headings} onScrollTo={onScrollTo} onScrollTop={onScrollTop} />
 }
-import { DeleteCatDialog } from './DeleteCatDialog'
-import { DEMO_HEADINGS } from './constants'
 
 export function DocReader() {
   const [dark, setDark] = useState(false)
@@ -154,7 +154,12 @@ export function DocReader() {
         if (--pending === 0) {
           const st = useDocReaderStore.getState()
           const cats = [...st.cats, { id: catId, name: folderName, deletable: true, open: true }]
-          useDocReaderStore.setState({ cats, files: [...st.files, ...newFiles], activeFileId: newFiles[0]?.id ?? st.activeFileId })
+          useDocReaderStore.setState({
+            cats,
+            files: [...st.files, ...newFiles],
+            openTabs: [...st.openTabs, ...newFiles.map((f) => f.id)],
+            activeFileId: newFiles[0]?.id ?? st.activeFileId,
+          })
         }
       }
       reader.readAsText(file)
@@ -173,12 +178,13 @@ export function DocReader() {
   }, [closeTab])
 
   const openDemo = useCallback(() => {
+    if (activeFileId) setScrollPosition(activeFileId, mainRef.current?.scrollTop ?? 0)
     setActiveFileId(null)
     setEditing(false)
     setHeadings(DEMO_HEADINGS)
     setActiveHeadingId(DEMO_HEADINGS[0]?.id ?? null)
     mainRef.current?.scrollTo({ top: 0 })
-  }, [setActiveFileId, setEditing, setHeadings, setActiveHeadingId])
+  }, [activeFileId, setScrollPosition, setActiveFileId, setEditing, setHeadings, setActiveHeadingId])
 
   const scrollTo = useCallback((id: string) => {
     const el = document.getElementById(id)
