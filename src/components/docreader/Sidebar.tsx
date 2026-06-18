@@ -1,14 +1,25 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core'
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useDocReaderStore, uid, type Category, type DocFile } from '@/store/docreader'
-
-interface SidebarProps {
-  onOpenDemo: () => void
-  onOpenFile: (id: string) => void
-  onNewDoc: () => void
-  dragFileId: React.MutableRefObject<string | null>
-}
 
 function FileIcon() {
   return (
@@ -27,32 +38,85 @@ function ChevronIcon() {
   )
 }
 
+function SortableFileRow({
+  file,
+  activeFileId,
+  onOpenFile,
+}: {
+  file: DocFile
+  activeFileId: string | null
+  onOpenFile: (id: string) => void
+}) {
+  const { deleteFile } = useDocReaderStore()
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: file.id })
+
+  return (
+    <div
+      ref={setNodeRef}
+      data-libitem
+      data-active={file.id === activeFileId ? 'true' : 'false'}
+      onClick={() => onOpenFile(file.id)}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.25 : 1,
+        display: 'flex',
+        alignItems: 'center',
+        gap: 8,
+        padding: '7px 10px',
+        borderRadius: 7,
+        cursor: 'grab',
+        fontSize: 13.5,
+        borderLeft: '3px solid transparent',
+      }}
+      {...attributes}
+      {...listeners}
+    >
+      <FileIcon />
+      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
+      <button
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => { e.stopPropagation(); deleteFile(file.id) }}
+        aria-label="刪除"
+        className="dr-file-del"
+        style={{ flexShrink: 0, width: 18, height: 18, display: 'none', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--muted)', borderRadius: 4 }}
+      >
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+    </div>
+  )
+}
+
 interface CategoryRowProps {
   cat: Category
   files: DocFile[]
   activeFileId: string | null
   onOpenFile: (id: string) => void
-  dragFileId: React.MutableRefObject<string | null>
 }
 
-function CategoryRow({ cat, files, activeFileId, onOpenFile, dragFileId }: CategoryRowProps) {
-  const { toggleCat, setConfirmCatId, setRenamingCatId, renameCategory, deleteFile, renamingCatId } = useDocReaderStore()
+function CategoryRow({ cat, files, activeFileId, onOpenFile }: CategoryRowProps) {
+  const { toggleCat, setConfirmCatId, setRenamingCatId, renameCategory, renamingCatId } = useDocReaderStore()
   const isOpen = cat.open !== false
   const renameRef = useRef<HTMLInputElement>(null)
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id })
+  const fileIds = files.map((f) => f.id)
 
   return (
     <div
+      ref={setNodeRef}
       data-cat
-      style={{ display: 'flex', flexDirection: 'column', gap: 2, marginTop: 8, borderRadius: 8, transition: 'background .12s' }}
-      onDragOver={(e) => { e.preventDefault(); (e.currentTarget as HTMLElement).style.background = 'rgba(212,169,106,0.14)' }}
-      onDragLeave={(e) => { (e.currentTarget as HTMLElement).style.background = '' }}
-      onDrop={(e) => {
-        e.preventDefault()
-        ;(e.currentTarget as HTMLElement).style.background = ''
-        if (dragFileId.current) {
-          useDocReaderStore.getState().moveFile(dragFileId.current, cat.id)
-          dragFileId.current = null
-        }
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        marginTop: 8,
+        borderRadius: 8,
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.3 : 1,
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: '4px 2px' }}>
@@ -78,7 +142,9 @@ function CategoryRow({ cat, files, activeFileId, onOpenFile, dragFileId }: Categ
           <>
             <button
               onClick={() => toggleCat(cat.id)}
-              style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'pointer', fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--muted)', padding: '2px 4px' }}
+              {...attributes}
+              {...listeners}
+              style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'grab', fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--muted)', padding: '2px 4px' }}
             >
               <span style={{ transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform .18s', display: 'inline-flex' }}>
                 <ChevronIcon />
@@ -89,6 +155,7 @@ function CategoryRow({ cat, files, activeFileId, onOpenFile, dragFileId }: Categ
             {cat.deletable && (
               <>
                 <button
+                  onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); setRenamingCatId(cat.id) }}
                   aria-label="重新命名"
                   className="dr-cat-action"
@@ -97,6 +164,7 @@ function CategoryRow({ cat, files, activeFileId, onOpenFile, dragFileId }: Categ
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
                 </button>
                 <button
+                  onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => { e.stopPropagation(); setConfirmCatId(cat.id) }}
                   aria-label="刪除分類"
                   className="dr-cat-action dr-cat-delete"
@@ -112,34 +180,11 @@ function CategoryRow({ cat, files, activeFileId, onOpenFile, dragFileId }: Categ
 
       {isOpen && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingBottom: 2 }}>
-          {files.map((file) => (
-            <div
-              key={file.id}
-              data-libitem
-              data-active={file.id === activeFileId ? 'true' : 'false'}
-              draggable
-              onDragStart={(e) => {
-                dragFileId.current = file.id
-                if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; try { e.dataTransfer.setData('text/plain', file.id) } catch (_) {} }
-              }}
-              onClick={() => onOpenFile(file.id)}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 7, cursor: 'pointer', fontSize: 13.5, borderLeft: '3px solid transparent' }}
-            >
-              <FileIcon />
-              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  deleteFile(file.id)
-                }}
-                aria-label="刪除"
-                className="dr-file-del"
-                style={{ flexShrink: 0, width: 18, height: 18, display: 'none', alignItems: 'center', justifyContent: 'center', background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--muted)', borderRadius: 4 }}
-              >
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
-              </button>
-            </div>
-          ))}
+          <SortableContext items={fileIds} strategy={verticalListSortingStrategy}>
+            {files.map((file) => (
+              <SortableFileRow key={file.id} file={file} activeFileId={activeFileId} onOpenFile={onOpenFile} />
+            ))}
+          </SortableContext>
           {files.length === 0 && (
             <div style={{ padding: '6px 11px', color: 'var(--muted)', fontSize: 12, opacity: 0.65, fontStyle: 'italic' }}>拖放檔案到此分類</div>
           )}
@@ -149,9 +194,81 @@ function CategoryRow({ cat, files, activeFileId, onOpenFile, dragFileId }: Categ
   )
 }
 
-export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc, dragFileId }: SidebarProps) {
-  const { cats, files, activeFileId, addingCategory, setAddingCategory, addCategory } = useDocReaderStore()
+function DragPreview({ id }: { id: string }) {
+  const cats = useDocReaderStore((s) => s.cats)
+  const files = useDocReaderStore((s) => s.files)
+  const cat = cats.find((c) => c.id === id)
+  const file = files.find((f) => f.id === id)
+
+  if (cat) {
+    return (
+      <div style={{ padding: '4px 8px', background: 'var(--sidebar-bg)', border: '1px solid var(--amber)', borderRadius: 7, fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--muted)', boxShadow: '0 4px 14px rgba(0,0,0,0.18)', whiteSpace: 'nowrap' }}>
+        {cat.name}
+      </div>
+    )
+  }
+
+  if (file) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', borderRadius: 7, fontSize: 13.5, background: 'var(--sidebar-bg)', boxShadow: '0 4px 14px rgba(0,0,0,0.18)' }}>
+        <FileIcon />
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 160 }}>{file.name}</span>
+      </div>
+    )
+  }
+
+  return null
+}
+
+interface SidebarProps {
+  onOpenDemo: () => void
+  onOpenFile: (id: string) => void
+  onNewDoc: () => void
+}
+
+export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
+  const { cats, files, activeFileId, addingCategory, setAddingCategory, addCategory, reorderCats, reorderFiles, moveFile } = useDocReaderStore()
   const newCatRef = useRef<HTMLInputElement>(null)
+  const [dragActiveId, setDragActiveId] = useState<string | null>(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  )
+
+  const handleDragStart = ({ active }: DragStartEvent) => {
+    setDragActiveId(String(active.id))
+  }
+
+  const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    setDragActiveId(null)
+    if (!over || active.id === over.id) return
+
+    const activeId = String(active.id)
+    const overId = String(over.id)
+
+    const isCat = (id: string) => cats.some((c) => c.id === id)
+    const isFile = (id: string) => files.some((f) => f.id === id)
+
+    if (isCat(activeId) && isCat(overId)) {
+      reorderCats(activeId, overId)
+      return
+    }
+
+    if (isFile(activeId)) {
+      if (isFile(overId)) {
+        const activeCat = files.find((f) => f.id === activeId)!.catId
+        const overCat = files.find((f) => f.id === overId)!.catId
+        if (activeCat === overCat) {
+          reorderFiles(activeId, overId)
+        } else {
+          moveFile(activeId, overCat)
+        }
+      } else if (isCat(overId)) {
+        moveFile(activeId, overId)
+      }
+    }
+  }
 
   const handleNewDoc = () => {
     const id = uid()
@@ -169,6 +286,8 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc, dragFileId }: Sideba
     const inp = document.getElementById('dr-folder-input') as HTMLInputElement | null
     inp?.click()
   }
+
+  const catIds = cats.map((c) => c.id)
 
   return (
     <aside
@@ -223,17 +342,29 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc, dragFileId }: Sideba
           </div>
         )}
 
-        {/* Categories */}
-        {cats.map((cat) => (
-          <CategoryRow
-            key={cat.id}
-            cat={cat}
-            files={files.filter((f) => f.catId === cat.id)}
-            activeFileId={activeFileId}
-            onOpenFile={onOpenFile}
-            dragFileId={dragFileId}
-          />
-        ))}
+        {/* Categories with DnD */}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext items={catIds} strategy={verticalListSortingStrategy}>
+            {cats.map((cat) => (
+              <CategoryRow
+                key={cat.id}
+                cat={cat}
+                files={files.filter((f) => f.catId === cat.id)}
+                activeFileId={activeFileId}
+                onOpenFile={onOpenFile}
+              />
+            ))}
+          </SortableContext>
+
+          <DragOverlay>
+            {dragActiveId ? <DragPreview id={dragActiveId} /> : null}
+          </DragOverlay>
+        </DndContext>
 
         {/* Footer */}
         <div style={{ marginTop: 'auto', paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 8 }}>

@@ -22,7 +22,6 @@ export function DocReader() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const mainRef = useRef<HTMLElement | null>(null)
-  const dragFileId = useRef<string | null>(null)
 
   const { activeFileId, files, setActiveFileId, setHeadings, setActiveHeadingId, setEditing, addFile, openTab, closeTab, setScrollPosition } = useDocReaderStore()
 
@@ -233,7 +232,6 @@ export function DocReader() {
           onOpenDemo={openDemo}
           onOpenFile={openFile}
           onNewDoc={handleNewDoc}
-          dragFileId={dragFileId}
         />
 
         {/* Mobile drawer backdrop */}
