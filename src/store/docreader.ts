@@ -95,6 +95,7 @@ export const useDocReaderStore = create<DocReaderState & DocReaderActions>()(
       closeTab: (id) =>
         set((s) => {
           const idx = s.openTabs.indexOf(id)
+          if (idx === -1) return {}
           const newTabs = s.openTabs.filter((t) => t !== id)
           const newPositions = { ...s.scrollPositions }
           delete newPositions[id]
@@ -106,7 +107,11 @@ export const useDocReaderStore = create<DocReaderState & DocReaderActions>()(
         }),
 
       setScrollPosition: (id, top) =>
-        set((s) => ({ scrollPositions: { ...s.scrollPositions, [id]: top } })),
+        set((s) =>
+          s.openTabs.includes(id)
+            ? { scrollPositions: { ...s.scrollPositions, [id]: top } }
+            : {}
+        ),
 
       addFile: (file) =>
         set((s) => ({
@@ -122,21 +127,23 @@ export const useDocReaderStore = create<DocReaderState & DocReaderActions>()(
         })),
 
       deleteFile: (id) => {
-        const { activeFileId, openTabs, scrollPositions } = get()
-        const wasActive = activeFileId === id
-        const idx = openTabs.indexOf(id)
-        const newTabs = openTabs.filter((t) => t !== id)
-        const newPositions = { ...scrollPositions }
-        delete newPositions[id]
-        const newActive = wasActive
-          ? (newTabs[idx] ?? newTabs[idx - 1] ?? null)
-          : activeFileId
-        set((s) => ({
-          files: s.files.filter((f) => f.id !== id),
-          openTabs: newTabs,
-          scrollPositions: newPositions,
-          activeFileId: newActive,
-        }))
+        let wasActive = false
+        set((s) => {
+          wasActive = s.activeFileId === id
+          const idx = s.openTabs.indexOf(id)
+          const newTabs = s.openTabs.filter((t) => t !== id)
+          const newPositions = { ...s.scrollPositions }
+          delete newPositions[id]
+          const newActive = wasActive
+            ? (newTabs[idx] ?? newTabs[idx - 1] ?? null)
+            : s.activeFileId
+          return {
+            files: s.files.filter((f) => f.id !== id),
+            openTabs: newTabs,
+            scrollPositions: newPositions,
+            activeFileId: newActive,
+          }
+        })
         return wasActive
       },
 
