@@ -57,6 +57,8 @@ interface DocReaderActions {
   toggleCat: (id: string) => void
   renameCategory: (id: string, name: string) => void
   deleteCategory: (id: string) => void
+  reorderCats: (activeId: string, overId: string) => void
+  reorderFiles: (activeId: string, overId: string) => void
 }
 
 const DEFAULT_CATS: Category[] = [
@@ -180,6 +182,28 @@ export const useDocReaderStore = create<DocReaderState & DocReaderActions>()(
           files: s.files.map((f) => (f.catId === id ? { ...f, catId: 'uncat' } : f)),
           confirmCatId: null,
         })),
+
+      reorderCats: (activeId, overId) =>
+        set((s) => {
+          const from = s.cats.findIndex((c) => c.id === activeId)
+          const to   = s.cats.findIndex((c) => c.id === overId)
+          if (from === -1 || to === -1 || from === to) return {}
+          const next = [...s.cats]
+          const [item] = next.splice(from, 1)
+          next.splice(to, 0, item)
+          return { cats: next }
+        }),
+
+      reorderFiles: (activeId, overId) =>
+        set((s) => {
+          const from = s.files.findIndex((f) => f.id === activeId)
+          const to   = s.files.findIndex((f) => f.id === overId)
+          if (from === -1 || to === -1 || from === to) return {}
+          const next = [...s.files]
+          const [item] = next.splice(from, 1)
+          next.splice(to, 0, item)
+          return { files: next }
+        }),
     }),
     {
       name: 'docreader_library',
