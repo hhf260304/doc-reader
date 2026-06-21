@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import {
   DndContext,
   DragEndEvent,
+  DragMoveEvent,
   DragOverlay,
   DragStartEvent,
   KeyboardSensor,
@@ -20,7 +21,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useDocReaderStore, uid, type Category, type DocFile } from '@/store/docreader'
-import { buildTree, getDepth, getSubtreeMaxDepth, type CategoryNode } from '@/lib/tree'
+import { buildTree, getDepth, getSubtreeMaxDepth, getDescendants, type CategoryNode } from '@/lib/tree'
 
 function FileIcon() {
   return (
@@ -295,9 +296,13 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
-  const { cats, files, activeFileId, addingCategory, setAddingCategory, addCategory, reorderCats, reorderFiles, moveFile } = useDocReaderStore()
+  const { cats, files, activeFileId, addingCategory, setAddingCategory, addCategory,
+          reorderCats, reorderFiles, moveFile, nestCategory } = useDocReaderStore()
   const newCatRef = useRef<HTMLInputElement>(null)
   const [dragActiveId, setDragActiveId] = useState<string | null>(null)
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null)
+  const [dropIntent, setDropIntent] = useState<'nest' | 'reorder-above' | 'reorder-below' | null>(null)
+  const pointerRef = useRef({ x: 0, y: 0 })
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -308,8 +313,66 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
     setDragActiveId(String(active.id))
   }
 
+  const handleDragMove = ({ over }: DragMoveEvent) => {
+    if (!over) {
+      setDropTargetId(null)
+      setDropIntent(null)
+      return
+    }
+    const overId = String(over.id)
+    const isCatTarget = cats.some((c) => c.id === overId)
+    if (!isCatTarget) {
+      setDropTargetId(null)
+      setDropIntent(null)
+      return
+    }
+    // 取得目標 header 元素的 bounding rect
+    const headerEl = document.querySelector(`[data-cat-id="${overId}"] [data-cat-header]`)
+    if (!headerEl) {
+      setDropTargetId(null)
+      setDropIntent(null)
+      return
+    }
+    const rect = headerEl.getBoundingClientRect()
+    const y = pointerRef.current.y
+    const isTopEdge = y < rect.top + rect.height * 0.25
+    const isBottomEdge = y > rect.bottom - rect.height * 0.25
+
+    if (isTopEdge || isBottomEdge) {
+      setDropTargetId(overId)
+      setDropIntent(isTopEdge ? 'reorder-above' : 'reorder-below')
+      return
+    }
+
+    // 中心：嘗試巢狀 — 做深度守衛（UI 層）
+    if (dragActiveId) {
+      const parentDepth = getDepth(cats, overId)
+      const subtreeDepth = getSubtreeMaxDepth(cats, dragActiveId)
+      const targetCat = cats.find((c) => c.id === overId)
+      const descendants = getDescendants(cats, dragActiveId)
+      const canNest =
+        targetCat?.deletable &&
+        overId !== dragActiveId &&
+        !descendants.includes(overId) &&
+        parentDepth + subtreeDepth <= 3
+
+      if (canNest) {
+        setDropTargetId(overId)
+        setDropIntent('nest')
+      } else {
+        setDropTargetId(overId)
+        setDropIntent('reorder-below')
+      }
+    }
+  }
+
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
+    const intent = dropIntent
+    const targetId = dropTargetId
     setDragActiveId(null)
+    setDropTargetId(null)
+    setDropIntent(null)
+
     if (!over || active.id === over.id) return
 
     const activeId = String(active.id)
@@ -319,7 +382,11 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
     const isFile = (id: string) => files.some((f) => f.id === id)
 
     if (isCat(activeId) && isCat(overId)) {
-      reorderCats(activeId, overId)
+      if (intent === 'nest') {
+        nestCategory(activeId, overId)
+      } else {
+        reorderCats(activeId, overId)
+      }
       return
     }
 
@@ -339,7 +406,11 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
     }
   }
 
-  const handleDragCancel = () => setDragActiveId(null)
+  const handleDragCancel = () => {
+    setDragActiveId(null)
+    setDropTargetId(null)
+    setDropIntent(null)
+  }
 
   const handleNewDoc = () => {
     const id = uid()
@@ -361,6 +432,7 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
   return (
     <aside
       id="dr-sidebar"
+      onPointerMove={(e) => { pointerRef.current = { x: e.clientX, y: e.clientY } }}
       style={{
         width: 'var(--sb-w)', flex: '0 0 var(--sb-w)', background: 'var(--sidebar-bg)',
         borderRight: '1px solid var(--border)', overflowY: 'auto', overflowX: 'hidden',
@@ -416,6 +488,7 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragStart={handleDragStart}
+          onDragMove={handleDragMove}
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
@@ -431,8 +504,8 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
                     depth={0}
                     activeFileId={activeFileId}
                     onOpenFile={onOpenFile}
-                    dropTargetId={null}
-                    dropIntent={null}
+                    dropTargetId={dropTargetId}
+                    dropIntent={dropIntent}
                   />
                 ))}
               </SortableContext>
