@@ -187,9 +187,14 @@ export const useDocReaderStore = create<DocReaderState & DocReaderActions>()(
           const newTabs = s.openTabs.filter((t) => !fileIdsToDelete.includes(t))
           const newPositions = { ...s.scrollPositions }
           fileIdsToDelete.forEach((fid) => delete newPositions[fid])
-          const idx = s.openTabs.indexOf(s.activeFileId ?? '')
-          const newActive = fileIdsToDelete.includes(s.activeFileId ?? '')
-            ? (newTabs[idx] ?? newTabs[idx - 1] ?? null)
+          const wasActive = fileIdsToDelete.includes(s.activeFileId ?? '')
+          const newActive = wasActive
+            ? (() => {
+                const activeIdx = s.openTabs.indexOf(s.activeFileId ?? '')
+                // Count how many non-deleted tabs were before activeIdx
+                const newIdx = s.openTabs.slice(0, activeIdx).filter((t) => !fileIdsToDelete.includes(t)).length
+                return newTabs[newIdx] ?? newTabs[newIdx - 1] ?? null
+              })()
             : s.activeFileId
           return {
             cats: s.cats.filter((c) => !toDelete.has(c.id)),
