@@ -2,10 +2,16 @@
 
 import { AnimatePresence, motion } from 'motion/react'
 import { useDocReaderStore } from '@/store/docreader'
+import { getDescendants } from '@/lib/tree'
 
 export function DeleteCatDialog() {
-  const { confirmCatId, cats, setConfirmCatId, deleteCategory } = useDocReaderStore()
+  const { confirmCatId, cats, files, setConfirmCatId, deleteCategory } = useDocReaderStore()
   const cat = confirmCatId ? cats.find((c) => c.id === confirmCatId) : null
+  const descendantIds = cat ? getDescendants(cats, cat.id) : []
+  const descendantCatCount = descendantIds.length
+  const affectedFileCount = cat
+    ? files.filter((f) => [cat.id, ...descendantIds].includes(f.catId)).length
+    : 0
 
   return (
     <AnimatePresence>
@@ -36,7 +42,15 @@ export function DeleteCatDialog() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h3 style={{ margin: 0, fontFamily: "'Newsreader',serif", fontSize: 19, fontWeight: 600, color: 'var(--brown)' }}>刪除分類</h3>
                 <p style={{ margin: '8px 0 0', fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 13.5, lineHeight: 1.6, color: 'var(--muted)' }}>
-                  確定要刪除「<strong style={{ color: 'var(--ink)', fontWeight: 600 }}>{cat.name}</strong>」嗎？此分類中的文件會移至「未分類」，分類本身將被刪除。
+                  確定要刪除「<strong style={{ color: 'var(--ink)', fontWeight: 600 }}>{cat.name}</strong>」嗎？
+                  {descendantCatCount > 0 && (
+                    <> 將連同 <strong style={{ color: 'var(--ink)' }}>{descendantCatCount} 個子資料夾</strong>、</>
+                  )}
+                  {affectedFileCount > 0 && (
+                    <><strong style={{ color: 'var(--ink)' }}>{affectedFileCount} 個檔案</strong> 一起刪除。</>
+                  )}
+                  {affectedFileCount === 0 && descendantCatCount === 0 && ' 此操作無法復原。'}
+                  {(affectedFileCount > 0 || descendantCatCount > 0) && '此操作無法復原。'}
                 </p>
               </div>
             </div>
