@@ -161,7 +161,7 @@ export const useDocReaderStore = create<DocReaderState & DocReaderActions>()(
         if (!nm) { set({ addingCategory: false }); return }
         const id = 'c' + Date.now()
         set((s) => ({
-          cats: [...s.cats, { id, name: nm, deletable: true, open: true }],
+          cats: [...s.cats, { id, name: nm, deletable: true, open: true, parentId: null }],
           addingCategory: false,
         }))
       },
@@ -183,9 +183,20 @@ export const useDocReaderStore = create<DocReaderState & DocReaderActions>()(
       deleteCategory: (id) =>
         set((s) => {
           const toDelete = new Set([id, ...getDescendants(s.cats, id)])
+          const fileIdsToDelete = s.files.filter((f) => toDelete.has(f.catId)).map((f) => f.id)
+          const newTabs = s.openTabs.filter((t) => !fileIdsToDelete.includes(t))
+          const newPositions = { ...s.scrollPositions }
+          fileIdsToDelete.forEach((fid) => delete newPositions[fid])
+          const idx = s.openTabs.indexOf(s.activeFileId ?? '')
+          const newActive = fileIdsToDelete.includes(s.activeFileId ?? '')
+            ? (newTabs[idx] ?? newTabs[idx - 1] ?? null)
+            : s.activeFileId
           return {
             cats: s.cats.filter((c) => !toDelete.has(c.id)),
             files: s.files.filter((f) => !toDelete.has(f.catId)),
+            openTabs: newTabs,
+            scrollPositions: newPositions,
+            activeFileId: newActive,
             confirmCatId: null,
           }
         }),
