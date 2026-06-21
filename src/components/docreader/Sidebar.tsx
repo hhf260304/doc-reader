@@ -20,6 +20,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useDocReaderStore, uid, type Category, type DocFile } from '@/store/docreader'
+import { buildTree, getDepth, getSubtreeMaxDepth, type CategoryNode } from '@/lib/tree'
 
 function FileIcon() {
   return (
@@ -91,23 +92,52 @@ function SortableFileRow({
 }
 
 interface CategoryRowProps {
-  cat: Category
-  files: DocFile[]
+  node: CategoryNode
+  depth: number
   activeFileId: string | null
   onOpenFile: (id: string) => void
+  dropTargetId: string | null
+  dropIntent: 'nest' | 'reorder-above' | 'reorder-below' | null
 }
 
-function CategoryRow({ cat, files, activeFileId, onOpenFile }: CategoryRowProps) {
+function CategoryRow({ node, depth, activeFileId, onOpenFile, dropTargetId, dropIntent }: CategoryRowProps) {
+  const { cat, children, files } = node
   const { toggleCat, setConfirmCatId, setRenamingCatId, renameCategory, renamingCatId } = useDocReaderStore()
   const isOpen = cat.open !== false
   const renameRef = useRef<HTMLInputElement>(null)
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: cat.id, disabled: !cat.deletable })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: cat.id,
+    disabled: !cat.deletable,
+  })
+
+  const isDropTarget = dropTargetId === cat.id
+  const indent = depth * 14
+
+  let headerBorder = '1px solid transparent'
+  let headerBg = 'transparent'
+  let topLine = false
+  let bottomLine = false
+
+  if (isDropTarget) {
+    if (dropIntent === 'nest') {
+      headerBorder = '1px solid var(--amber)'
+      headerBg = 'color-mix(in srgb, var(--amber) 8%, transparent)'
+    } else if (dropIntent === 'reorder-above') {
+      topLine = true
+    } else if (dropIntent === 'reorder-below') {
+      bottomLine = true
+    }
+  }
+
   const fileIds = files.map((f) => f.id)
+  const childIds = children.map((n) => n.cat.id)
+  const allSortableIds = [...childIds, ...fileIds]
 
   return (
     <div
       ref={setNodeRef}
       data-cat
+      data-cat-id={cat.id}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -119,7 +149,25 @@ function CategoryRow({ cat, files, activeFileId, onOpenFile }: CategoryRowProps)
         opacity: isDragging ? 0.3 : 1,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: '4px 2px' }}>
+      {/* 排序指示線（上方） */}
+      {topLine && (
+        <div style={{ height: 2, background: 'var(--amber)', borderRadius: 1, margin: '0 4px' }} />
+      )}
+
+      <div
+        data-cat-header
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 2,
+          padding: '4px 2px',
+          paddingLeft: indent + 2,
+          borderRadius: 7,
+          border: headerBorder,
+          background: headerBg,
+          transition: 'border-color .12s, background .12s',
+        }}
+      >
         {renamingCatId === cat.id ? (
           <div style={{ display: 'flex', gap: 6, width: '100%', padding: '0 2px' }}>
             <input
@@ -144,13 +192,15 @@ function CategoryRow({ cat, files, activeFileId, onOpenFile }: CategoryRowProps)
               onClick={() => { if (!isDragging) toggleCat(cat.id) }}
               {...attributes}
               {...listeners}
-              style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: 'grab', fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--muted)', padding: '2px 4px' }}
+              style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, background: 'transparent', border: 'none', cursor: cat.deletable ? 'grab' : 'default', fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--muted)', padding: '2px 4px' }}
             >
               <span style={{ transform: isOpen ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform .18s', display: 'inline-flex' }}>
                 <ChevronIcon />
               </span>
               <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{cat.name}</span>
-              <span style={{ flexShrink: 0, color: 'var(--border)', fontWeight: 500 }}>{files.length}</span>
+              <span style={{ flexShrink: 0, color: 'var(--border)', fontWeight: 500 }}>
+                {files.length + children.length}
+              </span>
             </button>
             {cat.deletable && (
               <>
@@ -178,15 +228,33 @@ function CategoryRow({ cat, files, activeFileId, onOpenFile }: CategoryRowProps)
         )}
       </div>
 
+      {/* 排序指示線（下方） */}
+      {bottomLine && (
+        <div style={{ height: 2, background: 'var(--amber)', borderRadius: 1, margin: '0 4px' }} />
+      )}
+
       {isOpen && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2, paddingBottom: 2 }}>
-          <SortableContext items={fileIds} strategy={verticalListSortingStrategy}>
+          <SortableContext items={allSortableIds} strategy={verticalListSortingStrategy}>
+            {/* 子資料夾（遞迴） */}
+            {children.map((child) => (
+              <CategoryRow
+                key={child.cat.id}
+                node={child}
+                depth={depth + 1}
+                activeFileId={activeFileId}
+                onOpenFile={onOpenFile}
+                dropTargetId={dropTargetId}
+                dropIntent={dropIntent}
+              />
+            ))}
+            {/* 檔案 */}
             {files.map((file) => (
               <SortableFileRow key={file.id} file={file} activeFileId={activeFileId} onOpenFile={onOpenFile} />
             ))}
           </SortableContext>
-          {files.length === 0 && (
-            <div style={{ padding: '6px 11px', color: 'var(--muted)', fontSize: 12, opacity: 0.65, fontStyle: 'italic' }}>拖放檔案到此分類</div>
+          {files.length === 0 && children.length === 0 && (
+            <div style={{ padding: '6px 11px', paddingLeft: indent + 11, color: 'var(--muted)', fontSize: 12, opacity: 0.65, fontStyle: 'italic' }}>拖放檔案到此分類</div>
           )}
         </div>
       )}
@@ -290,8 +358,6 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
     inp?.click()
   }
 
-  const catIds = cats.map((c) => c.id)
-
   return (
     <aside
       id="dr-sidebar"
@@ -353,17 +419,25 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
           onDragEnd={handleDragEnd}
           onDragCancel={handleDragCancel}
         >
-          <SortableContext items={catIds} strategy={verticalListSortingStrategy}>
-            {cats.map((cat) => (
-              <CategoryRow
-                key={cat.id}
-                cat={cat}
-                files={files.filter((f) => f.catId === cat.id)}
-                activeFileId={activeFileId}
-                onOpenFile={onOpenFile}
-              />
-            ))}
-          </SortableContext>
+          {(() => {
+            const tree = buildTree(cats, files)
+            const rootIds = tree.map((n) => n.cat.id)
+            return (
+              <SortableContext items={rootIds} strategy={verticalListSortingStrategy}>
+                {tree.map((node) => (
+                  <CategoryRow
+                    key={node.cat.id}
+                    node={node}
+                    depth={0}
+                    activeFileId={activeFileId}
+                    onOpenFile={onOpenFile}
+                    dropTargetId={null}
+                    dropIntent={null}
+                  />
+                ))}
+              </SortableContext>
+            )
+          })()}
 
           <DragOverlay>
             {dragActiveId ? <DragPreview id={dragActiveId} /> : null}
