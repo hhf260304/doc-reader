@@ -59,7 +59,7 @@ interface DocReaderActions {
   toggleCat: (id: string) => void
   renameCategory: (id: string, name: string) => void
   deleteCategory: (id: string) => void
-  reorderCats: (activeId: string, overId: string) => void
+  reorderCats: (activeId: string, overId: string, position?: 'before' | 'after') => void
   nestCategory: (id: string, parentId: string | null) => void
   reorderFiles: (activeId: string, overId: string) => void
   reorderTabs: (activeId: string, overId: string) => void
@@ -206,7 +206,7 @@ export const useDocReaderStore = create<DocReaderState & DocReaderActions>()(
           }
         }),
 
-      reorderCats: (activeId, overId) =>
+      reorderCats: (activeId, overId, position: 'before' | 'after' = 'before') =>
         set((s) => {
           const active = s.cats.find((c) => c.id === activeId)
           const over = s.cats.find((c) => c.id === overId)
@@ -216,11 +216,15 @@ export const useDocReaderStore = create<DocReaderState & DocReaderActions>()(
           const overParent = over.parentId ?? null
           if (activeParent !== overParent) return {}
           const from = s.cats.indexOf(active)
-          const to = s.cats.indexOf(over)
+          let to = s.cats.indexOf(over)
           if (from === to) return {}
           const next = [...s.cats]
-          const [item] = next.splice(from, 1)
-          next.splice(to, 0, item)
+          next.splice(from, 1)
+          // 移除後索引位移修正
+          if (from < to) to--
+          // 'after' 時插在目標後一位
+          if (position === 'after') to++
+          next.splice(to, 0, active)
           return { cats: next }
         }),
 

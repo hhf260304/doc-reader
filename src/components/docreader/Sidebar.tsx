@@ -386,7 +386,7 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
       if (intent === 'nest') {
         nestCategory(activeId, resolvedTarget)
       } else {
-        reorderCats(activeId, resolvedTarget)
+        reorderCats(activeId, resolvedTarget, intent === 'reorder-below' ? 'after' : 'before')
       }
       return
     }
