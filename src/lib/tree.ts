@@ -21,7 +21,12 @@ export function buildTree(cats: Category[], files: DocFile[]): CategoryNode[] {
     if (!cat.parentId) {
       roots.push(node)
     } else {
-      nodeMap.get(cat.parentId)?.children.push(node)
+      const parentNode = nodeMap.get(cat.parentId)
+      if (parentNode) {
+        parentNode.children.push(node)
+      } else {
+        roots.push(node)
+      }
     }
   }
   return roots

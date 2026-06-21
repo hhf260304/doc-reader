@@ -43,14 +43,16 @@ export function DeleteCatDialog() {
                 <h3 style={{ margin: 0, fontFamily: "'Newsreader',serif", fontSize: 19, fontWeight: 600, color: 'var(--brown)' }}>刪除分類</h3>
                 <p style={{ margin: '8px 0 0', fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 13.5, lineHeight: 1.6, color: 'var(--muted)' }}>
                   確定要刪除「<strong style={{ color: 'var(--ink)', fontWeight: 600 }}>{cat.name}</strong>」嗎？
-                  {descendantCatCount > 0 && (
-                    <> 將連同 <strong style={{ color: 'var(--ink)' }}>{descendantCatCount} 個子資料夾</strong>、</>
+                  {(descendantCatCount > 0 || affectedFileCount > 0) && (
+                    <>
+                      {' '}將連同{' '}
+                      {descendantCatCount > 0 && <strong style={{ color: 'var(--ink)' }}>{descendantCatCount} 個子資料夾</strong>}
+                      {descendantCatCount > 0 && affectedFileCount > 0 && '、'}
+                      {affectedFileCount > 0 && <strong style={{ color: 'var(--ink)' }}>{affectedFileCount} 個檔案</strong>}
+                      {' '}一起刪除。
+                    </>
                   )}
-                  {affectedFileCount > 0 && (
-                    <><strong style={{ color: 'var(--ink)' }}>{affectedFileCount} 個檔案</strong> 一起刪除。</>
-                  )}
-                  {affectedFileCount === 0 && descendantCatCount === 0 && ' 此操作無法復原。'}
-                  {(affectedFileCount > 0 || descendantCatCount > 0) && '此操作無法復原。'}
+                  {' '}此操作無法復原。
                 </p>
               </div>
             </div>
