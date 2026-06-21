@@ -3,6 +3,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { Heading } from '@/lib/markdown'
+import { getDepth, getSubtreeMaxDepth, getDescendants } from '@/lib/tree'
 
 export interface DocFile {
   id: string
@@ -16,6 +17,7 @@ export interface Category {
   name: string
   deletable: boolean
   open: boolean
+  parentId?: string | null   // null / undefined = 根層級
 }
 
 interface DocReaderState {
@@ -58,6 +60,7 @@ interface DocReaderActions {
   renameCategory: (id: string, name: string) => void
   deleteCategory: (id: string) => void
   reorderCats: (activeId: string, overId: string) => void
+  nestCategory: (id: string, parentId: string | null) => void
   reorderFiles: (activeId: string, overId: string) => void
   reorderTabs: (activeId: string, overId: string) => void
 }
@@ -178,21 +181,51 @@ export const useDocReaderStore = create<DocReaderState & DocReaderActions>()(
       },
 
       deleteCategory: (id) =>
-        set((s) => ({
-          cats: s.cats.filter((c) => c.id !== id),
-          files: s.files.map((f) => (f.catId === id ? { ...f, catId: 'uncat' } : f)),
-          confirmCatId: null,
-        })),
+        set((s) => {
+          const toDelete = new Set([id, ...getDescendants(s.cats, id)])
+          return {
+            cats: s.cats.filter((c) => !toDelete.has(c.id)),
+            files: s.files.filter((f) => !toDelete.has(f.catId)),
+            confirmCatId: null,
+          }
+        }),
 
       reorderCats: (activeId, overId) =>
         set((s) => {
-          const from = s.cats.findIndex((c) => c.id === activeId)
-          const to   = s.cats.findIndex((c) => c.id === overId)
-          if (from === -1 || to === -1 || from === to) return {}
+          const active = s.cats.find((c) => c.id === activeId)
+          const over = s.cats.find((c) => c.id === overId)
+          if (!active || !over) return {}
+          // 同層守衛
+          const activeParent = active.parentId ?? null
+          const overParent = over.parentId ?? null
+          if (activeParent !== overParent) return {}
+          const from = s.cats.indexOf(active)
+          const to = s.cats.indexOf(over)
+          if (from === to) return {}
           const next = [...s.cats]
           const [item] = next.splice(from, 1)
           next.splice(to, 0, item)
           return { cats: next }
+        }),
+
+      nestCategory: (id, parentId) =>
+        set((s) => {
+          const active = s.cats.find((c) => c.id === id)
+          if (!active || !active.deletable) return {}
+          if (parentId !== null) {
+            const target = s.cats.find((c) => c.id === parentId)
+            if (!target) return {}
+            // 不能把自己放進自己或後代
+            const descendants = getDescendants(s.cats, id)
+            if (descendants.includes(parentId) || parentId === id) return {}
+            // 深度守衛：parent 深度 + 自身子樹深度 ≤ 3
+            const parentDepth = getDepth(s.cats, parentId)
+            const subtreeDepth = getSubtreeMaxDepth(s.cats, id)
+            if (parentDepth + subtreeDepth > 3) return {}
+          }
+          return {
+            cats: s.cats.map((c) => (c.id === id ? { ...c, parentId } : c)),
+          }
         }),
 
       reorderFiles: (activeId, overId) =>
