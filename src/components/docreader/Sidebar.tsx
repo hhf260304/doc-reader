@@ -20,7 +20,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useDocReaderStore, uid, type Category, type DocFile } from '@/store/docreader'
+import { useDocReaderStore, uid, type DocFile } from '@/store/docreader'
 import { buildTree, getDepth, getSubtreeMaxDepth, getDescendants, type CategoryNode } from '@/lib/tree'
 
 function FileIcon() {
