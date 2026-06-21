@@ -382,10 +382,11 @@ export function Sidebar({ onOpenDemo, onOpenFile, onNewDoc }: SidebarProps) {
     const isFile = (id: string) => files.some((f) => f.id === id)
 
     if (isCat(activeId) && isCat(overId)) {
+      const resolvedTarget = targetId ?? overId
       if (intent === 'nest') {
-        nestCategory(activeId, overId)
+        nestCategory(activeId, resolvedTarget)
       } else {
-        reorderCats(activeId, overId)
+        reorderCats(activeId, resolvedTarget)
       }
       return
     }
